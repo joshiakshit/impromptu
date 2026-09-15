@@ -6,6 +6,7 @@
     <meta name="theme-color" content="#17233d" />
     <meta name="description" content="Solo impromptu, group discussion, and extempore speaking practice." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script>try{document.documentElement.dataset.theme=localStorage.getItem("speaking-practice.theme")||((matchMedia("(prefers-color-scheme: dark)").matches)?"dark":"light")}catch{}</script>
     <link rel="stylesheet" href="/styles.css" />
     <title>Speaking Practice</title>
   </head>
@@ -15,7 +16,10 @@
         <span class="brand-mark" aria-hidden="true"><span></span></span>
         <span>Speaking Practice</span>
       </a>
-      <a class="history-link" href="#history">History <span id="history-count">0</span></a>
+      <div class="header-actions">
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode"><span aria-hidden="true">☾</span></button>
+        <a class="history-link" href="#history">History <span id="history-count">0</span></a>
+      </div>
     </header>
     <main>
       <section id="practice" class="practice-shell" aria-live="polite"></section>

@@ -1,23 +1,13 @@
+import { topics } from "./topics.js";
 const PREP_SECONDS = 15 * 60;
 const SPEECH_SECONDS = 5 * 60;
 const ACTIVE_KEY = "speaking-practice.active";
-const TOPICS_KEY = "speaking-practice.topic-order";
-const topics = [
-    "A habit that changed my life", "The best way to spend a free day", "What makes a good friend", "A place everyone should visit once", "The value of learning to cook", "How music affects our mood", "Why hobbies matter", "The role of humour in daily life", "What home means to me", "A useful lesson from failure",
-    "The perfect morning routine", "Why reading still matters", "A skill I want to master", "Small acts of kindness", "The importance of sleep", "How travel changes perspective", "Living with less", "The benefits of walking", "What makes a memorable teacher", "A tradition worth keeping",
-    "Is comfort the enemy of growth?", "What does success mean?", "Freedom and responsibility", "The power of silence", "Can time be wasted?", "Is curiosity more important than knowledge?", "The difference between confidence and arrogance", "When is change necessary?", "Does competition make us better?", "The meaning of courage",
-    "Can money buy happiness?", "Why uncertainty is useful", "Is perfection worth pursuing?", "The value of patience", "Are first impressions reliable?", "What makes an idea powerful?", "Is being busy the same as being productive?", "The cost of convenience", "Do limits increase creativity?", "What should progress look like?",
-    "Social media does more harm than good", "Should school uniforms be required?", "Remote work is better than office work", "Exams are not the best measure of ability", "Public transport should be free", "Four-day workweeks should become standard", "College education is worth the cost", "Advertising aimed at children should be banned", "Zoos should no longer exist", "Voting should be compulsory",
-    "Technology makes us less patient", "Homework should be optional", "Cashless societies are a good idea", "Competitive sports belong in schools", "Cities should limit private cars", "Influencers should be accountable for recommendations", "Online learning can replace classrooms", "Everyone should take a gap year", "Fast fashion should be regulated", "Space exploration deserves public funding",
-    "Artificial intelligence and the future of work", "The digital divide", "Privacy in a connected world", "Climate responsibility: individuals or governments?", "The pressure to be constantly available", "Misinformation and public trust", "Mental health at work", "The future of public libraries", "Food waste in modern cities", "Equal access to education",
-    "The rise of the creator economy", "Should anonymity exist online?", "Balancing development and the environment", "The changing meaning of community", "Ageing populations and social responsibility", "Should companies disclose salary ranges?", "The ethics of planned obsolescence", "Can cities be both smart and humane?", "The impact of short-form video", "Should internet access be a basic right?",
-    "Leaders are made, not born", "Teamwork matters more than individual talent", "Rules are meant to be challenged", "Failure teaches more than success", "Actions speak louder than words", "Young people should enter politics", "Debate is better than agreement", "Tradition can slow progress", "Privacy matters more than convenience", "Economic growth should not be the main goal",
-    "Should robots care for older people?", "Local products are better than global brands", "News should be free to access", "Public figures deserve private lives", "Parents should limit children's screen time", "Libraries are more important than ever", "Schools should teach personal finance", "Governments should regulate addictive app design", "Work experience matters more than qualifications", "Every citizen should do community service"
-];
+const TOPICS_KEY = "speaking-practice.topic-order-v2";
 const practice = document.querySelector("#practice");
 const historyList = document.querySelector("#history-list");
 const historyCount = document.querySelector("#history-count");
 const toast = document.querySelector("#toast");
+const themeToggle = document.querySelector("#theme-toggle");
 let state = loadState();
 let tickId = 0;
 let recorder = null;
@@ -100,8 +90,35 @@ function render() {
 }
 function renderTopic() {
     practice.innerHTML = `<div class="stage-card"><div class="topic-panel"><p class="eyebrow">Your topic</p><h1 class="topic-title">${escapeHtml(state.topic)}</h1><p class="topic-meta">Take a moment. Change it if it does not spark an idea.</p><div class="action-row"><button class="button" id="another" aria-label="Choose another random topic">↻ Another topic</button><button class="button primary" id="start-prep">Start preparation →</button></div></div><aside class="side-panel">${flow(0)}</aside></div>`;
-    document.querySelector("#another")?.addEventListener("click", () => { state = { stage: "topic", topic: nextTopic(), notes: "" }; saveState(); render(); });
+    document.querySelector("#another")?.addEventListener("click", spinTopic);
     document.querySelector("#start-prep")?.addEventListener("click", startPreparation);
+}
+async function spinTopic() {
+    const heading = document.querySelector(".topic-title");
+    const button = document.querySelector("#another");
+    if (!heading || !button || button.disabled)
+        return;
+    const finalTopic = nextTopic();
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        state = { stage: "topic", topic: finalTopic, notes: "" };
+        saveState();
+        render();
+        return;
+    }
+    button.disabled = true;
+    button.textContent = "Picking…";
+    practice.setAttribute("aria-live", "off");
+    for (let step = 0; step < 8; step++) {
+        heading.classList.remove("slot-tick");
+        void heading.offsetWidth;
+        heading.textContent = topics[Math.floor(Math.random() * topics.length)];
+        heading.classList.add("slot-tick");
+        await new Promise(resolve => window.setTimeout(resolve, 65 + step * 9));
+    }
+    state = { stage: "topic", topic: finalTopic, notes: "" };
+    saveState();
+    practice.setAttribute("aria-live", "polite");
+    render();
 }
 function startPreparation() {
     state.stage = "prep";
@@ -375,7 +392,19 @@ document.addEventListener("keydown", event => {
             stopSpeech();
     }
 });
+function applyTheme(theme) {
+    document.documentElement.dataset.theme = theme;
+    themeToggle.innerHTML = `<span aria-hidden="true">${theme === "dark" ? "☀" : "☾"}</span>`;
+    const label = `Switch to ${theme === "dark" ? "light" : "dark"} mode`;
+    themeToggle.setAttribute("aria-label", label);
+    themeToggle.title = label;
+    try {
+        localStorage.setItem("speaking-practice.theme", theme);
+    }
+    catch { /* Theme still applies for this visit. */ }
+}
+themeToggle.addEventListener("click", () => applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark"));
+applyTheme(document.documentElement.dataset.theme === "dark" ? "dark" : "light");
 await recoverInterrupted();
 render();
 await renderHistory();
-export {};
