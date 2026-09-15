@@ -1,0 +1,12 @@
+{
+  "name": "speaking-practice",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc && node scripts/copy-static.mjs"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  }
+}
