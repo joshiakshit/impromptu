@@ -40,6 +40,19 @@ const advancedTopics = advancedSubjects.flatMap(subject => advancedLenses.map(ma
 
 export const topics = [...advancedTopics, ...accessibleTopics];
 
+export const topicCategories = ["Everyday life", "Work", "Society", "Abstract ideas", "Science", "Technology", "History"] as const;
+export type TopicCategory = "Any category" | typeof topicCategories[number];
+const subjectCategories: TopicCategory[] = ["Science", "Science", "Abstract ideas", "Society", "Technology", "Society", "Abstract ideas", "History", "Society"];
+const workTopics = new Set([42, 45, 60, 64, 66, 70, 75, 80, 81, 98]);
+
+export function topicsForCategory(category: TopicCategory): string[] {
+  if (category === "Any category") return topics;
+  return [
+    ...advancedSubjects.flatMap((subject, index) => subjectCategories[Math.floor(index / 10)] === category ? advancedLenses.map(makeTopic => makeTopic(subject)) : []),
+    ...accessibleTopics.filter((_, index) => (index < 20 ? "Everyday life" : index < 40 ? "Abstract ideas" : workTopics.has(index) ? "Work" : "Society") === category),
+  ];
+}
+
 if (topics.length !== 1000 || new Set(topics).size !== 1000) {
   throw new Error("The topic bank must contain exactly 1,000 unique topics.");
 }
